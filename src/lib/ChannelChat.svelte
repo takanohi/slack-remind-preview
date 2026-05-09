@@ -8,6 +8,7 @@
     previews: Preview[];
     who: Who;
     channelName: string;
+    commandHTML: string;
     whatSlack: string;
     when: string;
     isComposable: boolean;
@@ -21,6 +22,7 @@
     previews,
     who,
     channelName,
+    commandHTML,
     whatSlack,
     when,
     isComposable,
@@ -66,6 +68,7 @@
   <MessageComposer
     {who}
     {channelName}
+    {commandHTML}
     {whatSlack}
     {when}
     {isComposable}

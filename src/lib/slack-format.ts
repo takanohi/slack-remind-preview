@@ -41,6 +41,23 @@ export function sanitizePreviewHTML(html: string): string {
 }
 
 /**
+ * Reduce pasted/editor HTML to the safe subset this app intentionally supports.
+ */
+export function sanitizeEditorHTML(html: string): string {
+  if (!html) return '';
+  const source = new DOMParser().parseFromString(html, 'text/html');
+  const clean = document.implementation.createHTMLDocument('');
+
+  for (const child of Array.from(source.body.childNodes)) {
+    for (const safeChild of sanitizeNode(child, clean, { preserveLinkAttrs: false })) {
+      clean.body.appendChild(safeChild);
+    }
+  }
+
+  return clean.body.innerHTML;
+}
+
+/**
  * Unwrap a leading block element (`<div>` / `<p>`) so its content renders
  * inline with preceding text. Browsers wrap multi-line contenteditable input
  * in block elements; without this, a label like "Reminder:" placed before
@@ -91,7 +108,7 @@ export function linkifyBareURLs(html: string): string {
 
 const URL_RE = /[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^\s<>"]+/g;
 const TRAILING_PUNCT_RE = /[.,;:!?]+$/;
-const SAFE_HREF_RE = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^\s<>"]+$/;
+export const SAFE_HREF_RE = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^\s<>"]+$/;
 const SAFE_PREVIEW_TAGS = new Set([
   'A',
   'B',
@@ -155,7 +172,11 @@ function linkifyNode(node: Node): void {
   parent.removeChild(node);
 }
 
-function sanitizeNode(node: Node, ownerDoc: Document): Node[] {
+function sanitizeNode(
+  node: Node,
+  ownerDoc: Document,
+  options: { preserveLinkAttrs: boolean } = { preserveLinkAttrs: true },
+): Node[] {
   if (node.nodeType === Node.TEXT_NODE) {
     return [ownerDoc.createTextNode(node.textContent ?? '')];
   }
@@ -179,8 +200,10 @@ function sanitizeNode(node: Node, ownerDoc: Document): Node[] {
     }
     const a = ownerDoc.createElement('a');
     a.setAttribute('href', href);
-    a.setAttribute('target', '_blank');
-    a.setAttribute('rel', 'noopener noreferrer');
+    if (options.preserveLinkAttrs) {
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener noreferrer');
+    }
     for (const child of children) a.appendChild(child);
     return [a];
   }

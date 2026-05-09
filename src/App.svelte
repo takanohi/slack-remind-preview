@@ -1,6 +1,11 @@
 <script lang="ts">
   import ComposePane from './lib/ComposePane.svelte';
   import ChannelChat from './lib/ChannelChat.svelte';
+  import {
+    buildCommandClipboardData,
+    buildCommandPreviewHTML,
+    CHROMIUM_WEB_CUSTOM_DATA_MIME,
+  } from './lib/slack-clipboard';
   import { htmlToPlain, htmlToSlack } from './lib/slack-format';
   import { parseFiringDate } from './lib/parse-when';
   import type { Preview, Who } from './lib/types';
@@ -13,13 +18,23 @@
 
   let whatPlain = $derived(htmlToPlain(what));
   let whatSlack = $derived(htmlToSlack(what));
-
-  let command = $derived.by(() => {
-    const target =
-      who === 'me' ? 'me' : channelName.trim() ? `#${channelName.trim()}` : '';
-    const parts = ['/remind', target, whatSlack, when.trim()].filter(Boolean);
-    return parts.join(' ');
-  });
+  let target = $derived(
+    who === 'me' ? 'me' : channelName.trim() ? `#${channelName.trim()}` : '',
+  );
+  let commandClipboardData = $derived(
+    buildCommandClipboardData({
+      target,
+      whatHTML: what,
+      when,
+    }),
+  );
+  let commandPreviewHTML = $derived(
+    buildCommandPreviewHTML({
+      target,
+      whatHTML: what,
+      when,
+    }),
+  );
 
   let firingDate = $derived(parseFiringDate(when.trim()));
 
@@ -49,14 +64,53 @@
 
   async function copyCommand(): Promise<void> {
     if (!isComposable) return;
+
     try {
-      await navigator.clipboard.writeText(command);
-      copied = true;
-      if (copyResetTimer) clearTimeout(copyResetTimer);
-      copyResetTimer = setTimeout(() => (copied = false), 1500);
+      await writeCommandToClipboard();
+      showCopiedState();
     } catch {
-      // Clipboard API can fail in non-secure contexts; silently ignore.
+      try {
+        await navigator.clipboard.writeText(commandClipboardData.text);
+        showCopiedState();
+      } catch {
+        // Clipboard API can fail in non-secure contexts; silently ignore.
+      }
     }
+  }
+
+  async function writeCommandToClipboard(): Promise<void> {
+    if (typeof ClipboardItem === 'undefined' || !navigator.clipboard.write) {
+      await navigator.clipboard.writeText(commandClipboardData.text);
+      return;
+    }
+
+    try {
+      await navigator.clipboard.write([buildClipboardItem(true)]);
+    } catch {
+      await navigator.clipboard.write([buildClipboardItem(false)]);
+    }
+  }
+
+  function buildClipboardItem(includeCustomData: boolean): ClipboardItem {
+    const data: Record<string, Blob> = {
+      'text/plain': new Blob([commandClipboardData.text], { type: 'text/plain' }),
+      'text/html': new Blob([commandClipboardData.html], { type: 'text/html' }),
+    };
+
+    if (includeCustomData) {
+      data[CHROMIUM_WEB_CUSTOM_DATA_MIME] = new Blob(
+        [JSON.stringify(commandClipboardData.webCustomData)],
+        { type: CHROMIUM_WEB_CUSTOM_DATA_MIME },
+      );
+    }
+
+    return new ClipboardItem(data);
+  }
+
+  function showCopiedState(): void {
+    copied = true;
+    if (copyResetTimer) clearTimeout(copyResetTimer);
+    copyResetTimer = setTimeout(() => (copied = false), 1500);
   }
 
   // Keyboard shortcuts: ⌘/Ctrl + Enter sends, ⌘/Ctrl + Shift + Enter copies.
@@ -89,6 +143,7 @@
     {previews}
     {who}
     channelName={channelName.trim()}
+    commandHTML={commandPreviewHTML}
     {whatSlack}
     when={when.trim()}
     {isComposable}

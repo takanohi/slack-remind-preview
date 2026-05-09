@@ -6,6 +6,7 @@
   interface Props {
     who: Who;
     channelName: string;
+    commandHTML: string;
     whatSlack: string;
     when: string;
     isComposable: boolean;
@@ -18,6 +19,7 @@
   let {
     who,
     channelName,
+    commandHTML,
     whatSlack,
     when,
     isComposable,
@@ -31,17 +33,21 @@
 <footer class="shrink-0 px-5 pb-3">
   <div class="flex items-end gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2">
     <div
-      class="min-h-[1.5rem] flex-1 self-center text-sm leading-relaxed text-gray-800 [&_a]:text-slack-aubergine [&_a]:underline"
+      class="min-h-[1.5rem] flex-1 self-center text-sm leading-relaxed text-gray-800 [&_a]:text-slack-link [&_a]:underline"
     >
       {#if hasContent}
-        <span class="font-medium text-gray-700">/remind</span>
-        {#if who === 'me'}
-          <span> me</span>
-        {:else if channelName}
-          {' '}<ChannelMention name={channelName} />
+        {#if commandHTML}
+          <span class="whitespace-pre-wrap break-words">{@html commandHTML}</span>
+        {:else}
+          <span class="font-medium text-gray-700">/remind</span>
+          {#if who === 'me'}
+            <span> me</span>
+          {:else if channelName}
+            {' '}<ChannelMention name={channelName} />
+          {/if}
+          {#if whatSlack}<span class="whitespace-pre-wrap"> {whatSlack}</span>{/if}
+          {#if when}<span> {when}</span>{/if}
         {/if}
-        {#if whatSlack}<span class="whitespace-pre-wrap"> {whatSlack}</span>{/if}
-        {#if when}<span> {when}</span>{/if}
       {:else}
         <span class="text-gray-400"
           >Message <span class="font-medium">#{CHANNEL_NAME}</span></span

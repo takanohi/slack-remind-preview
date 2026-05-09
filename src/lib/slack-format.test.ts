@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   htmlToPlain,
+  sanitizeEditorHTML,
   htmlToSlack,
   inlineLeadingBlock,
   linkifyBareURLs,
@@ -295,6 +296,22 @@ describe('sanitizePreviewHTML', () => {
 
   it('drops non-text nodes from unsupported media tags', () => {
     expect(sanitizePreviewHTML('<img src=x onerror=alert(1)>after')).toBe('after');
+  });
+});
+
+describe('sanitizeEditorHTML', () => {
+  it('preserves safe links without adding preview-only attributes', () => {
+    expect(
+      sanitizeEditorHTML(
+        '<a href="https://example.com" onclick="alert(1)" rel="nofollow">docs</a>',
+      ),
+    ).toBe('<a href="https://example.com">docs</a>');
+  });
+
+  it('unwraps unsafe links', () => {
+    expect(sanitizeEditorHTML('<a href="javascript:alert(1)">click</a>')).toBe(
+      'click',
+    );
   });
 });
 

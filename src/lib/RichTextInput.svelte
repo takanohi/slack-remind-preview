@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { SAFE_HREF_RE, sanitizeEditorHTML } from './slack-format';
+
   interface Props {
     value: string;
     placeholder?: string;
@@ -15,6 +17,7 @@
     italic: false,
     strike: false,
     code: false,
+    link: false,
   });
 
   function computeIsEmpty(html: string): boolean {
@@ -37,6 +40,7 @@
       italic: document.queryCommandState('italic'),
       strike: document.queryCommandState('strikeThrough'),
       code: !!findAncestor('CODE'),
+      link: !!findAncestor('A'),
     };
   }
 
@@ -111,10 +115,51 @@
     editorEl?.focus();
   }
 
+  function toggleLink(): void {
+    const existing = findAncestor('A');
+    if (existing) {
+      const parent = existing.parentNode;
+      if (parent) {
+        while (existing.firstChild) {
+          parent.insertBefore(existing.firstChild, existing);
+        }
+        parent.removeChild(existing);
+      }
+      syncValue();
+      updateActive();
+      editorEl?.focus();
+      return;
+    }
+
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    const href = window.prompt('Link URL', 'https://');
+    if (!href) return;
+    const trimmed = href.trim();
+    if (!SAFE_HREF_RE.test(trimmed)) return;
+
+    document.execCommand('createLink', false, trimmed);
+    if (editorEl) {
+      editorEl.innerHTML = sanitizeEditorHTML(editorEl.innerHTML);
+    }
+    syncValue();
+    updateActive();
+    editorEl?.focus();
+  }
+
   function onPaste(e: ClipboardEvent): void {
     e.preventDefault();
+    const html = sanitizeEditorHTML(e.clipboardData?.getData('text/html') ?? '');
+    if (html) {
+      document.execCommand('insertHTML', false, html);
+      syncValue();
+      updateActive();
+      return;
+    }
     const text = e.clipboardData?.getData('text/plain') ?? '';
     document.execCommand('insertText', false, text);
+    syncValue();
+    updateActive();
   }
 
   function onKeydown(e: KeyboardEvent): void {
@@ -126,6 +171,9 @@
     } else if (!e.shiftKey && key === 'e') {
       e.preventDefault();
       toggleCode();
+    } else if (!e.shiftKey && key === 'k') {
+      e.preventDefault();
+      toggleLink();
     }
   }
 
@@ -204,6 +252,31 @@
         <polyline points="8 6 2 12 8 18" />
       </svg>
     </button>
+    <button
+      type="button"
+      onclick={toggleLink}
+      class="flex h-6 w-6 items-center justify-center rounded {activeStates.link
+        ? 'bg-slack-aubergine/15 text-slack-aubergine'
+        : 'text-gray-600 hover:bg-slack-aubergine/10 hover:text-slack-aubergine'}"
+      title="Link (⌘K)"
+      aria-label="Link"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M10 13a5 5 0 0 0 7.54.54l1.92-1.92a5 5 0 0 0-7.07-7.07L10.98 5.98" />
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-1.92 1.92a5 5 0 0 0 7.07 7.07l1.41-1.41" />
+      </svg>
+    </button>
   </div>
 
   <!-- editable area -->
@@ -227,7 +300,7 @@
       onclick={updateActive}
       onpaste={onPaste}
       onkeydown={onKeydown}
-      class="block min-h-[6rem] w-full px-3 py-2 text-sm text-gray-900 focus:outline-none [&_code]:rounded [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.9em]"
+      class="block min-h-[6rem] w-full px-3 py-2 text-sm text-gray-900 focus:outline-none [&_a]:cursor-pointer [&_a]:text-slack-link [&_a]:underline [&_code]:rounded [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.9em]"
     ></div>
     {#if isEmpty}
       <div

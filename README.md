@@ -43,6 +43,7 @@ pnpm run build
 - `Cmd/Ctrl + I`: italic
 - `Cmd/Ctrl + Shift + X`: strikethrough
 - `Cmd/Ctrl + E`: inline code
+- `Cmd/Ctrl + K`: link selected text
 
 ## Supported `/remind` syntax
 
@@ -107,18 +108,18 @@ Recurring patterns can be combined with a starting clause to set the first firin
   - `~strikethrough~`
   - `` `inline code` ``
 
-This tool emits URLs as plain text. It does not currently preserve labelled link markup in the generated command, so the safe path inside this UI is to paste raw URLs into the body and let Slack auto-link them. The preview pane auto-links any bare `scheme://…` URL (matching what Slack will render) so you can sanity-check the destination before posting.
+Use the toolbar or keyboard shortcuts to apply formatting and links before copying. On Chromium-based browsers, the copy action can preserve labelled links by writing Slack-compatible custom clipboard data alongside plain text and HTML. The preview pane still auto-links any bare `scheme://…` URL so you can sanity-check plain-URL reminders before posting.
 
 ### Limitations
 
 - **No sub-day recurrence.** `every hour` and similar are rejected by Slack — recurrence is daily or coarser
 - **The "when" expression must be English**, even in non-English workspaces
 - **Slack's natural-language parser is closed-source.** This tool covers the patterns above; less common phrasings may surface a "couldn't determine the firing time" warning
-- **This tool treats bare URLs as the supported link path.** If you need labelled link markup, add or adjust it directly in Slack after copying the command
+- **Labelled-link copy depends on Chromium clipboard support.** On browsers that reject custom clipboard formats, copy falls back to plain text
 
 ## Browser support
 
-The reminder editor targets current evergreen browsers. The rich-text toolbar still relies on `document.execCommand` for bold/italic/strike/code toggles, so the supported surface is the latest desktop Chrome, Edge, Firefox, and Safari releases where that editing behavior is still present.
+The reminder editor targets current evergreen browsers. The rich-text toolbar still relies on `document.execCommand` for bold/italic/strike/code/link actions, so the supported surface is the latest desktop Chrome, Edge, Firefox, and Safari releases where that editing behavior is still present.
 
 If a browser's editing engine diverges, the app should still degrade to plain text entry, but toolbar formatting and shortcut behavior are not guaranteed there.
 

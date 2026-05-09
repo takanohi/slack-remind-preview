@@ -88,11 +88,10 @@
         placeholder="to follow up on the launch"
       />
       <p class="mt-1 text-[11px] text-gray-500">
-        Multi-language OK. Toolbar shortcuts: ⌘B / ⌘I / ⌘⇧X / ⌘E.
+        Toolbar shortcuts: ⌘B / ⌘I / ⌘⇧X / ⌘E / ⌘K.
       </p>
       <p class="mt-1 text-[11px] text-gray-500">
-        This tool currently supports bare URLs for links. If you need labelled link markup,
-        add or adjust it in Slack after copying the command.
+        Select text and use the toolbar to apply formatting or links before copying.
       </p>
     </FieldSection>
 
