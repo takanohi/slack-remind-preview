@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+@theme {
+  --color-slack-aubergine: #4a154b;
+  --color-slack-aubergine-deep: #3f0e40;
+  --color-slack-green: #007a5a;
+  --color-slack-green-hover: #005f47;
+  --color-slack-cream: #f8f8f8;
+  --color-slack-compose: #f1ebf0;
+  --color-slack-link: #1264a3;
+}
