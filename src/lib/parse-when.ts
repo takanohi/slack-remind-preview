@@ -86,7 +86,9 @@ export function parseFiringDate(when: string, now: Date = new Date()): Date | nu
 
   // tomorrow [at TIME]
   if ((m = s.match(/^tomorrow(?:\s+at\s+(.+))?$/))) {
-    const [h, mm] = parseTime(m[1]);
+    const parsedTime = resolveTime(m[1]);
+    if (!parsedTime) return null;
+    const [h, mm] = parsedTime;
     const d = new Date(now);
     d.setDate(d.getDate() + 1);
     d.setHours(h, mm, 0, 0);
@@ -95,7 +97,9 @@ export function parseFiringDate(when: string, now: Date = new Date()): Date | nu
 
   // today [at TIME]
   if ((m = s.match(/^today(?:\s+at\s+(.+))?$/))) {
-    const [h, mm] = parseTime(m[1]);
+    const parsedTime = resolveTime(m[1]);
+    if (!parsedTime) return null;
+    const [h, mm] = parsedTime;
     const d = new Date(now);
     d.setHours(h, mm, 0, 0);
     return d;
@@ -113,7 +117,9 @@ export function parseFiringDate(when: string, now: Date = new Date()): Date | nu
   if ((m = s.match(/^next\s+(\w+)(?:\s+at\s+(.+))?$/))) {
     const dayIdx = dayNameToIndex(m[1]);
     if (dayIdx < 0) return null;
-    const [h, mm] = parseTime(m[2]);
+    const parsedTime = resolveTime(m[2]);
+    if (!parsedTime) return null;
+    const [h, mm] = parsedTime;
     return findNextDayOccurrence(now, [dayIdx], h, mm, true);
   }
 
@@ -121,7 +127,9 @@ export function parseFiringDate(when: string, now: Date = new Date()): Date | nu
   if ((m = s.match(/^every\s+other\s+(\w+)(?:\s+at\s+(.+))?$/))) {
     const dayIdx = dayNameToIndex(m[1]);
     if (dayIdx < 0) return null;
-    const [h, mm] = parseTime(m[2]);
+    const parsedTime = resolveTime(m[2]);
+    if (!parsedTime) return null;
+    const [h, mm] = parsedTime;
     return findNextDayOccurrence(now, [dayIdx], h, mm);
   }
 
@@ -135,14 +143,18 @@ export function parseFiringDate(when: string, now: Date = new Date()): Date | nu
     if (!count || count < 1) return null;
     const dayIdx = dayNameToIndex(m[2]);
     if (dayIdx < 0) return null;
-    const [h, mm] = parseTime(m[3]);
+    const parsedTime = resolveTime(m[3]);
+    if (!parsedTime) return null;
+    const [h, mm] = parsedTime;
     return findNextDayOccurrence(now, [dayIdx], h, mm);
   }
 
   // every X [at TIME] - recurring
   if ((m = s.match(/^every\s+(.+?)(?:\s+at\s+(.+))?$/i))) {
     const dayPart = m[1].trim();
-    const [h, mm] = parseTime(m[2]);
+    const parsedTime = resolveTime(m[2]);
+    if (!parsedTime) return null;
+    const [h, mm] = parsedTime;
     let dayIndices: number[] = [];
     if (dayPart === 'day') {
       dayIndices = [0, 1, 2, 3, 4, 5, 6];
@@ -161,11 +173,11 @@ export function parseFiringDate(when: string, now: Date = new Date()): Date | nu
     const monthIdx = MONTH_NAMES.indexOf(m[1]);
     if (monthIdx >= 0) {
       const day = parseInt(m[2], 10);
-      const [h, mm] = parseTime(m[3]);
-      const d = new Date(now);
-      d.setMonth(monthIdx, day);
-      d.setHours(h, mm, 0, 0);
-      if (d < now) d.setFullYear(d.getFullYear() + 1);
+      const parsedTime = resolveTime(m[3]);
+      if (!parsedTime) return null;
+      const [h, mm] = parsedTime;
+      const d = createMonthDayDate(now, monthIdx, day, h, mm);
+      if (!d) return null;
       return d;
     }
   }
@@ -174,7 +186,9 @@ export function parseFiringDate(when: string, now: Date = new Date()): Date | nu
   if ((m = s.match(/^on\s+(\w+)(?:\s+at\s+(.+))?$/))) {
     const dayIdx = dayNameToIndex(m[1]);
     if (dayIdx < 0) return null;
-    const [h, mm] = parseTime(m[2]);
+    const parsedTime = resolveTime(m[2]);
+    if (!parsedTime) return null;
+    const [h, mm] = parsedTime;
     return findNextDayOccurrence(now, [dayIdx], h, mm);
   }
 
@@ -183,10 +197,8 @@ export function parseFiringDate(when: string, now: Date = new Date()): Date | nu
     const day = parseInt(m[1], 10);
     const monthIdx = MONTH_NAMES.indexOf(m[2]);
     if (monthIdx >= 0) {
-      const d = new Date(now);
-      d.setMonth(monthIdx, day);
-      d.setHours(DEFAULT_HOUR, DEFAULT_MINUTE, 0, 0);
-      if (d < now) d.setFullYear(d.getFullYear() + 1);
+      const d = createMonthDayDate(now, monthIdx, day, DEFAULT_HOUR, DEFAULT_MINUTE);
+      if (!d) return null;
       return d;
     }
   }
@@ -204,8 +216,9 @@ export function parseFiringDate(when: string, now: Date = new Date()): Date | nu
   return null;
 }
 
-function parseTime(input: string | undefined): [number, number] {
-  return tryParseTime(input) ?? [DEFAULT_HOUR, DEFAULT_MINUTE];
+function resolveTime(input: string | undefined): [number, number] | null {
+  if (!input) return [DEFAULT_HOUR, DEFAULT_MINUTE];
+  return tryParseTime(input);
 }
 
 function tryParseTime(input: string | undefined): [number, number] | null {
@@ -216,6 +229,7 @@ function tryParseTime(input: string | undefined): [number, number] | null {
   if (m) {
     let h = parseInt(m[1], 10);
     const mm = m[2] ? parseInt(m[2], 10) : 0;
+    if (h < 1 || h > 12 || mm < 0 || mm > 59) return null;
     const ap = m[3];
     if (ap === 'pm' && h !== 12) h += 12;
     if (ap === 'am' && h === 12) h = 0;
@@ -223,8 +237,29 @@ function tryParseTime(input: string | undefined): [number, number] | null {
   }
   // "21:00" 24h
   m = s.match(/^(\d{1,2}):(\d{2})$/);
-  if (m) return [parseInt(m[1], 10), parseInt(m[2], 10)];
+  if (m) {
+    const h = parseInt(m[1], 10);
+    const mm = parseInt(m[2], 10);
+    if (h < 0 || h > 23 || mm < 0 || mm > 59) return null;
+    return [h, mm];
+  }
   return null;
+}
+
+function createMonthDayDate(
+  now: Date,
+  monthIdx: number,
+  day: number,
+  hour: number,
+  minute: number,
+): Date | null {
+  const d = new Date(now);
+  d.setMonth(monthIdx, day);
+  d.setHours(hour, minute, 0, 0);
+  if (d.getMonth() !== monthIdx || d.getDate() !== day) return null;
+  if (d < now) d.setFullYear(d.getFullYear() + 1);
+  if (d.getMonth() !== monthIdx || d.getDate() !== day) return null;
+  return d;
 }
 
 function parseDayList(s: string): string[] {

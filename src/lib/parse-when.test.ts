@@ -13,6 +13,12 @@ describe('parseFiringDate', () => {
     it('returns null for unrecognized text', () => {
       expect(parseFiringDate('something random', NOW)).toBeNull();
     });
+
+    it('returns null for impossible month-day combinations', () => {
+      expect(parseFiringDate('on February 31', NOW)).toBeNull();
+      expect(parseFiringDate('February 31', NOW)).toBeNull();
+      expect(parseFiringDate('31 February', NOW)).toBeNull();
+    });
   });
 
   describe('relative ("in N units")', () => {
@@ -153,6 +159,12 @@ describe('parseFiringDate', () => {
 
     it('returns null without recognizable time', () => {
       expect(parseFiringDate('at noon', NOW)).toBeNull();
+    });
+
+    it('returns null for out-of-range times', () => {
+      expect(parseFiringDate('at 99:99', NOW)).toBeNull();
+      expect(parseFiringDate('at 13pm', NOW)).toBeNull();
+      expect(parseFiringDate('at 24:00', NOW)).toBeNull();
     });
   });
 
@@ -306,6 +318,12 @@ describe('parseFiringDate', () => {
     it('handles 9pm correctly', () => {
       const d = parseFiringDate('today at 9pm', NOW)!;
       expect(d.getHours()).toBe(21);
+    });
+
+    it('rejects invalid explicit times even when the pattern itself is valid', () => {
+      expect(parseFiringDate('today at 25:00', NOW)).toBeNull();
+      expect(parseFiringDate('tomorrow at 9:99am', NOW)).toBeNull();
+      expect(parseFiringDate('every Monday at 61pm', NOW)).toBeNull();
     });
   });
 });
