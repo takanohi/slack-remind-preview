@@ -87,7 +87,7 @@ public/
 - **Single responsibility**. Consider splitting once a file pushes past ~200 lines
 - **State ownership lives in the nearest common ancestor** (typically `App.svelte`). Children read via props or two-way bindings, not by importing parent state
 - **Reusable atoms** live directly under `lib/`:
-  - `BellIcon.svelte` — bell glyph (favicon, WorkspaceRail, PreviewMessage)
+  - `BellIcon.svelte` — bell glyph (favicon, ComposePane, PreviewMessage)
   - `ChannelMention.svelte` — `#channel` pill
   - `SegmentedToggle.svelte` — generic 2-way segment (me/channel, Once/Recurring)
 

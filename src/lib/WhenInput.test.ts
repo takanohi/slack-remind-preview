@@ -16,7 +16,7 @@ describe('WhenInput', () => {
     render(WhenInput, { value: '' });
 
     await fireEvent.click(screen.getByRole('button', { name: 'Recurring' }));
-    await fireEvent.input(screen.getByLabelText('Start'), {
+    await fireEvent.input(screen.getByLabelText('Starts'), {
       target: { value: 'not a date' },
     });
 

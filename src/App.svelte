@@ -1,5 +1,4 @@
 <script lang="ts">
-  import WorkspaceRail from './lib/WorkspaceRail.svelte';
   import ComposePane from './lib/ComposePane.svelte';
   import ChannelChat from './lib/ChannelChat.svelte';
   import { htmlToPlain, htmlToSlack } from './lib/slack-format';
@@ -77,7 +76,6 @@
 </script>
 
 <div class="flex h-screen flex-col overflow-hidden bg-slack-cream text-gray-900 lg:flex-row">
-  <WorkspaceRail />
   <ComposePane
     bind:who
     bind:channelName

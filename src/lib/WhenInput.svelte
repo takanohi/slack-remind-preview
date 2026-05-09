@@ -118,7 +118,7 @@
       placeholder="tomorrow at 10am"
       class="block w-full rounded border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-500 focus:outline-none"
     />
-    <div class="flex flex-wrap items-center gap-1 pl-3">
+    <div class="flex flex-wrap items-center gap-1">
       <span class="text-[11px] text-gray-500">Examples:</span>
       {#each onceExamples as ex}
         <button
@@ -136,108 +136,112 @@
       </p>
     {/if}
   {:else}
-    <div class="space-y-3">
-      <!-- Day presets -->
-      <div class="flex flex-wrap gap-1.5">
-        {#each dayPresets as preset (preset.label)}
-          {@const active = arraysEqualAsSets(selectedDays, preset.days)}
-          <button
-            type="button"
-            onclick={() => applyDayPreset(preset.days)}
-            aria-pressed={active}
-            class="rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors {active
-              ? 'border-slack-aubergine bg-slack-aubergine text-white'
-              : 'border-gray-300 bg-white text-gray-700 hover:border-slack-aubergine/40 hover:bg-slack-aubergine/10'}"
-          >
-            {preset.label}
-          </button>
-        {/each}
-      </div>
+    <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div class="space-y-3 p-3">
+        <div class="space-y-2">
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+              Repeats on
+            </span>
+            <div class="flex flex-wrap justify-end gap-1.5">
+              {#each dayPresets as preset (preset.label)}
+                {@const active = arraysEqualAsSets(selectedDays, preset.days)}
+                <button
+                  type="button"
+                  onclick={() => applyDayPreset(preset.days)}
+                  aria-pressed={active}
+                  class="rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors {active
+                    ? 'border-slack-aubergine bg-slack-aubergine text-white'
+                    : 'border-gray-300 bg-white text-gray-700 hover:border-slack-aubergine/40 hover:bg-slack-aubergine/10'}"
+                >
+                  {preset.label}
+                </button>
+              {/each}
+            </div>
+          </div>
 
-      <!-- Day-of-week chips (multi-select, circular) -->
-      <div class="flex gap-1.5">
-        {#each days as d}
-          {@const picked = selectedDays.includes(d.value)}
-          <button
-            type="button"
-            onclick={() => toggleDay(d.value)}
-            title={d.label}
-            aria-label={d.label}
-            aria-pressed={picked}
-            class="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold transition-colors {picked
-              ? 'bg-slack-aubergine text-white'
-              : 'border border-gray-300 bg-white text-gray-600 hover:border-slack-aubergine/40 hover:bg-slack-aubergine/10'}"
-          >
-            {d.short}
-          </button>
-        {/each}
-      </div>
+          <div class="grid grid-cols-4 gap-1.5 sm:grid-cols-7">
+            {#each days as d}
+              {@const picked = selectedDays.includes(d.value)}
+              <button
+                type="button"
+                onclick={() => toggleDay(d.value)}
+                title={d.label}
+                aria-label={d.label}
+                aria-pressed={picked}
+                class="rounded-md border px-0 py-2 text-center text-xs font-semibold transition-colors {picked
+                  ? 'border-slack-aubergine bg-slack-aubergine text-white'
+                  : 'border-gray-300 bg-white text-gray-700 hover:border-slack-aubergine/40 hover:bg-slack-aubergine/10 hover:text-slack-aubergine'}"
+              >
+                {d.short}
+              </button>
+            {/each}
+          </div>
 
-      <!-- Time -->
-      <div class="flex items-center gap-2">
-        <label
-          for="when-time"
-          class="text-[11px] font-medium uppercase tracking-wider text-gray-500"
-        >
-          at
-        </label>
-        <input
-          id="when-time"
-          type="time"
-          bind:value={time}
-          class="rounded border border-gray-300 bg-white px-2.5 py-1 text-sm font-mono text-gray-800 focus:border-gray-500 focus:outline-none"
-        />
-      </div>
+          {#if recurringNoDays}
+            <p class="text-[11px] text-amber-700">⚠ Select at least one day.</p>
+          {/if}
+        </div>
 
-      <!-- Repeat interval (weeks) -->
-      <div class="flex items-center gap-2">
-        <label
-          for="when-interval"
-          class="text-[11px] font-medium uppercase tracking-wider text-gray-500"
-        >
-          Repeat every
-        </label>
-        <input
-          id="when-interval"
-          type="number"
-          min="1"
-          max="52"
-          bind:value={weekInterval}
-          class="w-16 rounded border border-gray-300 bg-white px-2.5 py-1 text-sm font-mono text-gray-800 focus:border-gray-500 focus:outline-none"
-        />
-        <span class="text-[11px] text-gray-500">{weekInterval === 1 ? 'week' : 'weeks'}</span>
-      </div>
-      {#if weekInterval > 1 && selectedDays.length > 1}
-        <p class="pl-3 text-[11px] text-gray-500">
-          Only the first day will fire when interval &gt; 1.
-        </p>
-      {/if}
+        <div class="border-t border-gray-200 pt-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+              Every
+            </span>
+            <input
+              id="when-interval"
+              type="number"
+              min="1"
+              max="52"
+              bind:value={weekInterval}
+              class="w-16 rounded-md border border-gray-300 bg-white px-2.5 py-1 text-sm font-mono text-gray-800 focus:border-gray-500 focus:outline-none"
+            />
+            <span class="text-sm text-gray-700">{weekInterval === 1 ? 'week' : 'weeks'}</span>
+            {#if weekInterval > 1 && selectedDays.length > 1}
+              <span class="text-[11px] text-gray-500">Uses the first selected day only.</span>
+            {/if}
+          </div>
+        </div>
 
-      <!-- Optional starting-from -->
-      <div class="flex items-center gap-2">
-        <label
-          for="when-start"
-          class="text-[11px] font-medium uppercase tracking-wider text-gray-500"
-        >
-          Start
-        </label>
-        <input
-          id="when-start"
-          type="text"
-          bind:value={startingFrom}
-          placeholder="tomorrow, next Monday, March 15…"
-          class="flex-1 rounded border border-gray-300 bg-white px-2.5 py-1 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-500 focus:outline-none"
-        />
-      </div>
-      {#if startingParseFailed}
-        <p class="pl-3 text-[11px] text-amber-700">
-          ⚠ Couldn't parse the start date.
-        </p>
-      {/if}
+        <div class="border-t border-gray-200 pt-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <label
+              for="when-time"
+              class="text-[11px] font-semibold uppercase tracking-wide text-gray-500"
+            >
+              At
+            </label>
+            <input
+              id="when-time"
+              type="time"
+              bind:value={time}
+              class="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-sm font-mono text-gray-800 focus:border-gray-500 focus:outline-none"
+            />
+          </div>
+        </div>
 
-      {#if recurringNoDays}
-        <p class="text-[11px] text-amber-700">⚠ Select at least one day.</p>
-      {/if}
+        <div class="border-t border-gray-200 pt-3">
+          <div class="flex items-center justify-between gap-3">
+            <label
+              for="when-start"
+              class="text-[11px] font-semibold uppercase tracking-wide text-gray-500"
+            >
+              Starts
+            </label>
+            <span class="text-[11px] text-gray-400">Optional</span>
+          </div>
+          <input
+            id="when-start"
+            type="text"
+            bind:value={startingFrom}
+            placeholder="tomorrow, next Monday, March 15…"
+            class="mt-2 block w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-500 focus:outline-none"
+          />
+          {#if startingParseFailed}
+            <p class="mt-2 text-[11px] text-amber-700">⚠ Couldn't parse the start date.</p>
+          {/if}
+        </div>
+      </div>
     </div>
   {/if}
 </div>

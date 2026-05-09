@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Who } from './types';
+  import BellIcon from './BellIcon.svelte';
   import RichTextInput from './RichTextInput.svelte';
   import WhenInput from './WhenInput.svelte';
   import WhoInput from './WhoInput.svelte';
@@ -28,7 +29,7 @@
   // Resize logic — drag the right-edge handle to widen.
   // Min 240px (form usability), max 50% of viewport.
   const MIN_WIDTH = 240;
-  const DEFAULT_WIDTH = 384;
+  const DEFAULT_WIDTH = 420;
   let width = $state(DEFAULT_WIDTH);
 
   function startResize(e: PointerEvent): void {
@@ -57,13 +58,24 @@
   style="--compose-width: {width}px;"
 >
   <!-- workspace header -->
-  <div class="flex h-14 shrink-0 items-center border-b border-slack-aubergine/15 px-4">
-    <h1 class="text-base font-bold text-slack-aubergine">Remind Preview for Slack</h1>
+  <div
+    class="flex h-14 shrink-0 items-center border-b border-slack-aubergine/15 bg-linear-to-r from-slack-aubergine to-slack-aubergine-deep px-4 text-white"
+  >
+    <div class="flex items-center gap-3">
+      <div
+        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/12 ring-1 ring-white/15 backdrop-blur-sm"
+      >
+        <BellIcon size={18} strokeWidth={2.2} class="text-white" />
+      </div>
+      <div class="min-w-0">
+        <h1 class="text-lg font-bold leading-tight">Remind Preview for Slack</h1>
+      </div>
+    </div>
   </div>
 
   <!-- form -->
   <div class="flex-1 space-y-3 overflow-y-auto px-4 py-4">
-    <h2 class="text-[11px] font-bold uppercase tracking-wider text-gray-500">Compose</h2>
+    <h2 class="text-xs font-bold text-gray-500">Compose</h2>
 
     <FieldSection label="Who" valid={whoValid}>
       <WhoInput bind:who bind:channelName />
@@ -75,10 +87,10 @@
         bind:value={what}
         placeholder="to follow up on the launch"
       />
-      <p class="mt-1 pl-3 text-[11px] text-gray-500">
+      <p class="mt-1 text-[11px] text-gray-500">
         Multi-language OK. Toolbar shortcuts: ⌘B / ⌘I / ⌘⇧X / ⌘E.
       </p>
-      <p class="mt-1 pl-3 text-[11px] text-gray-500">
+      <p class="mt-1 text-[11px] text-gray-500">
         This tool currently supports bare URLs for links. If you need labelled link markup,
         add or adjust it in Slack after copying the command.
       </p>

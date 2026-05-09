@@ -12,15 +12,15 @@
   let { value = $bindable(), options }: Props = $props();
 </script>
 
-<div class="flex gap-0.5 rounded-md border border-gray-300 bg-white p-0.5">
+<div class="flex gap-1 rounded-md">
   {#each options as option (option.value)}
     <button
       type="button"
       onclick={() => (value = option.value)}
       aria-pressed={value === option.value}
-      class="flex-1 rounded py-1 text-xs font-medium {value === option.value
-        ? 'bg-slack-aubergine text-white'
-        : 'text-gray-600 hover:bg-slack-aubergine/10'}"
+      class="flex-1 rounded-md border px-3 py-1 text-xs font-medium transition-colors {value === option.value
+        ? 'border-slack-aubergine bg-slack-aubergine text-white'
+        : 'border-gray-300 bg-white text-gray-600 hover:border-slack-aubergine/40 hover:bg-slack-aubergine/10 hover:text-slack-aubergine'}"
     >
       {option.label}
     </button>
