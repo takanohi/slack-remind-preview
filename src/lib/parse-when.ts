@@ -9,7 +9,7 @@
  *   tomorrow [at TIME]
  *   next <day>|week [at TIME]
  *   on <day> [at TIME]
- *   on <Month> <day> [at TIME]
+ *   [on] <Month> <day> [at TIME]
  *   <day> <Month>            (e.g. "31 December")
  *   at TIME                  (today, or tomorrow if past)
  *   every day|weekday|<days> [at TIME]
@@ -156,8 +156,8 @@ export function parseFiringDate(when: string, now: Date = new Date()): Date | nu
     return findNextDayOccurrence(now, dayIndices, h, mm);
   }
 
-  // on <Month> <day> [at TIME]
-  if ((m = s.match(/^on\s+(\w+)\s+(\d{1,2})(?:\s+at\s+(.+))?$/))) {
+  // [on] <Month> <day> [at TIME]
+  if ((m = s.match(/^(?:on\s+)?(\w+)\s+(\d{1,2})(?:\s+at\s+(.+))?$/))) {
     const monthIdx = MONTH_NAMES.indexOf(m[1]);
     if (monthIdx >= 0) {
       const day = parseInt(m[2], 10);

@@ -107,6 +107,12 @@ describe('parseFiringDate', () => {
       expect(d.getDate()).toBe(15);
     });
 
+    it('parses "March 15" without the "on" prefix', () => {
+      const d = parseFiringDate('March 15', NOW)!;
+      expect(d.getMonth()).toBe(2);
+      expect(d.getDate()).toBe(15);
+    });
+
     it('rolls into next year if date already passed', () => {
       const d = parseFiringDate('on January 1', NOW)!;
       expect(d.getMonth()).toBe(0);
@@ -252,6 +258,15 @@ describe('parseFiringDate', () => {
     it('accepts "starting on" form', () => {
       const d = parseFiringDate('every Tuesday starting on next Tuesday', NOW)!;
       expect(d.getDay()).toBe(2);
+    });
+
+    it('accepts month-day input in the starting clause', () => {
+      const d = parseFiringDate('every Monday at 9am starting on March 15', NOW)!;
+      expect(d.getFullYear()).toBe(2027);
+      expect(d.getMonth()).toBe(2);
+      expect(d.getDate()).toBe(15);
+      expect(d.getDay()).toBe(1);
+      expect(d.getHours()).toBe(9);
     });
 
     it('treats the starting moment itself as valid', () => {
