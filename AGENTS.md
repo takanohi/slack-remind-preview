@@ -112,7 +112,7 @@ public/
 - Test files are co-located: `lib/*.test.ts`
 - `pnpm run test` runs the full suite (also wired into CI)
 - For date logic, pass an explicit `now` to keep tests deterministic
-- No component-level integration tests yet. If they're added, use `@testing-library/svelte`
+- Component tests use `@testing-library/svelte` and should stay focused on the brittle user flows rather than broad snapshot coverage
 
 ## Slack `/remind` domain knowledge
 

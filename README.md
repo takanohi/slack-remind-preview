@@ -80,7 +80,14 @@ URLs are emitted as plain text. Slack `/remind`'s parser URL-encodes the `|` in 
 
 - Vite 8 + Svelte 5 + TypeScript 6
 - Tailwind CSS v4
+- Vitest + happy-dom + `@testing-library/svelte`
 - Hosted on Cloudflare Pages
+
+## Browser support
+
+The reminder editor targets current evergreen browsers. The rich-text toolbar still relies on `document.execCommand` for bold/italic/strike/code toggles, so the supported surface is the latest desktop Chrome, Edge, Firefox, and Safari releases where that editing behavior is still present.
+
+If a browser's editing engine diverges, the app should still degrade to plain text entry, but toolbar formatting and shortcut behavior are not guaranteed there.
 
 ## Development
 
