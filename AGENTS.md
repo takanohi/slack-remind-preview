@@ -119,7 +119,7 @@ public/
 These details bite — capture them here so they don't get lost.
 
 - **Recipient**: `me` or `#channel` only. `@user` was removed in 2023 (the API doc says "No longer supported")
-- **What (body)**: multi-language. Slack markdown supported: `*bold*` / `_italic_` / `~strike~` / `` `code` ``. **Links (`<URL|text>`) are not emitted** — Slack's `/remind` parser URL-encodes the `|`, breaking the link. The tool emits URLs as plain text and leaves embedding/relabeling to the user inside Slack
+- **What (body)**: multi-language. Slack markdown supported: `*bold*` / `_italic_` / `~strike~` / `` `code` ``. **This tool emits URLs as plain text by default** and does not currently preserve labelled link markup in the generated command, even if Slack itself can interpret it
 - **When (timing)**: **English only** (the ja-jp official help explicitly states this)
 - **Default time when omitted**: 09:00 in the user's timezone
 - **Sub-day recurrence is not supported** (`every hour` is rejected; daily-or-larger only)

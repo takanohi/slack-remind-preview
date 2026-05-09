@@ -78,6 +78,10 @@
       <p class="mt-1 pl-3 text-[11px] text-gray-500">
         Multi-language OK. Toolbar shortcuts: ⌘B / ⌘I / ⌘⇧X / ⌘E.
       </p>
+      <p class="mt-1 pl-3 text-[11px] text-gray-500">
+        This tool currently supports bare URLs for links. If you need labelled link markup,
+        add or adjust it in Slack after copying the command.
+      </p>
     </FieldSection>
 
     <FieldSection label="When" valid={whenValid}>

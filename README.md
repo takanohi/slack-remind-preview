@@ -67,14 +67,14 @@ Recurring patterns can be combined with a starting clause to set the first firin
   - `~strikethrough~`
   - `` `inline code` ``
 
-URLs are emitted as plain text. Slack `/remind`'s parser URL-encodes the `|` in `<URL|text>`, which corrupts the link, so this tool deliberately doesn't emit that syntax — paste raw URLs into the body and let Slack auto-link them, or relabel the link inside Slack after the reminder fires. The preview pane auto-links any bare `scheme://…` URL (matching what Slack will render) so you can sanity-check the destination before posting.
+This tool emits URLs as plain text. It does not currently preserve labelled link markup in the generated command, so the safe path inside this UI is to paste raw URLs into the body and let Slack auto-link them. The preview pane auto-links any bare `scheme://…` URL (matching what Slack will render) so you can sanity-check the destination before posting.
 
 ### Limitations
 
 - **No sub-day recurrence.** `every hour` and similar are rejected by Slack — recurrence is daily or coarser
 - **The "when" expression must be English**, even in non-English workspaces
 - **Slack's natural-language parser is closed-source.** This tool covers the patterns above; less common phrasings may surface a "couldn't determine the firing time" warning
-- **Links inside the message body cannot carry display text.** See above — only bare URLs survive `/remind`
+- **This tool treats bare URLs as the supported link path.** If you need labelled link markup, add or adjust it directly in Slack after copying the command
 
 ## Stack
 
