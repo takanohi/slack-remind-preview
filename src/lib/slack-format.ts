@@ -23,6 +23,24 @@ export function htmlToSlack(html: string): string {
 }
 
 /**
+ * Reduce arbitrary editor HTML to the small subset the preview intentionally
+ * supports before it reaches {@html}.
+ */
+export function sanitizePreviewHTML(html: string): string {
+  if (!html) return '';
+  const source = new DOMParser().parseFromString(html, 'text/html');
+  const clean = document.implementation.createHTMLDocument('');
+
+  for (const child of Array.from(source.body.childNodes)) {
+    for (const safeChild of sanitizeNode(child, clean)) {
+      clean.body.appendChild(safeChild);
+    }
+  }
+
+  return clean.body.innerHTML;
+}
+
+/**
  * Unwrap a leading block element (`<div>` / `<p>`) so its content renders
  * inline with preceding text. Browsers wrap multi-line contenteditable input
  * in block elements; without this, a label like "Reminder:" placed before
@@ -73,6 +91,22 @@ export function linkifyBareURLs(html: string): string {
 
 const URL_RE = /[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^\s<>"]+/g;
 const TRAILING_PUNCT_RE = /[.,;:!?]+$/;
+const SAFE_HREF_RE = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/[^\s<>"]+$/;
+const SAFE_PREVIEW_TAGS = new Set([
+  'A',
+  'B',
+  'BR',
+  'CODE',
+  'DEL',
+  'DIV',
+  'EM',
+  'I',
+  'P',
+  'S',
+  'STRIKE',
+  'STRONG',
+]);
+const DROP_WITH_CONTENT_TAGS = new Set(['IFRAME', 'OBJECT', 'SCRIPT', 'STYLE', 'SVG']);
 
 function linkifyNode(node: Node): void {
   if (node.nodeType === Node.ELEMENT_NODE) {
@@ -119,6 +153,41 @@ function linkifyNode(node: Node): void {
   }
   for (const p of parts) parent.insertBefore(p, node);
   parent.removeChild(node);
+}
+
+function sanitizeNode(node: Node, ownerDoc: Document): Node[] {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return [ownerDoc.createTextNode(node.textContent ?? '')];
+  }
+  if (node.nodeType !== Node.ELEMENT_NODE) return [];
+
+  const el = node as HTMLElement;
+  const tag = el.tagName;
+  if (DROP_WITH_CONTENT_TAGS.has(tag)) return [];
+  const children = Array.from(el.childNodes).flatMap((child) =>
+    sanitizeNode(child, ownerDoc),
+  );
+
+  if (!SAFE_PREVIEW_TAGS.has(tag)) return children;
+
+  if (tag === 'BR') return [ownerDoc.createElement('br')];
+
+  if (tag === 'A') {
+    const href = el.getAttribute('href');
+    if (!href || !SAFE_HREF_RE.test(href)) {
+      return children;
+    }
+    const a = ownerDoc.createElement('a');
+    a.setAttribute('href', href);
+    a.setAttribute('target', '_blank');
+    a.setAttribute('rel', 'noopener noreferrer');
+    for (const child of children) a.appendChild(child);
+    return [a];
+  }
+
+  const safeEl = ownerDoc.createElement(tag.toLowerCase());
+  for (const child of children) safeEl.appendChild(child);
+  return [safeEl];
 }
 
 /** Strip HTML to plain text — used for empty checks. */

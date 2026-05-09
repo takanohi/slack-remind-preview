@@ -4,6 +4,7 @@ import {
   htmlToSlack,
   inlineLeadingBlock,
   linkifyBareURLs,
+  sanitizePreviewHTML,
 } from './slack-format';
 
 describe('htmlToSlack', () => {
@@ -246,6 +247,54 @@ describe('linkifyBareURLs', () => {
     expect(linkifyBareURLs('<strong>https://example.com</strong>')).toBe(
       '<strong><a href="https://example.com" target="_blank" rel="noopener noreferrer">https://example.com</a></strong>',
     );
+  });
+});
+
+describe('sanitizePreviewHTML', () => {
+  it('returns empty for empty input', () => {
+    expect(sanitizePreviewHTML('')).toBe('');
+  });
+
+  it('preserves the small formatting subset used by the preview', () => {
+    expect(sanitizePreviewHTML('<strong>bold</strong><br><code>x()</code>')).toBe(
+      '<strong>bold</strong><br><code>x()</code>',
+    );
+  });
+
+  it('strips dangerous attributes from allowed tags', () => {
+    expect(
+      sanitizePreviewHTML('<strong onclick="alert(1)" class="x">bold</strong>'),
+    ).toBe('<strong>bold</strong>');
+  });
+
+  it('unwraps unsupported tags but keeps their text content', () => {
+    expect(sanitizePreviewHTML('<span>plain <u>text</u></span>')).toBe('plain text');
+  });
+
+  it('drops executable elements entirely', () => {
+    expect(sanitizePreviewHTML('<script>alert(1)</script><div>safe</div>')).toBe(
+      '<div>safe</div>',
+    );
+  });
+
+  it('keeps safe links and normalizes their attributes', () => {
+    expect(
+      sanitizePreviewHTML(
+        '<a href="https://example.com" onclick="alert(1)" rel="nofollow">docs</a>',
+      ),
+    ).toBe(
+      '<a href="https://example.com" target="_blank" rel="noopener noreferrer">docs</a>',
+    );
+  });
+
+  it('unwraps links with unsafe href values', () => {
+    expect(
+      sanitizePreviewHTML('<a href="javascript:alert(1)">click me</a>'),
+    ).toBe('click me');
+  });
+
+  it('drops non-text nodes from unsupported media tags', () => {
+    expect(sanitizePreviewHTML('<img src=x onerror=alert(1)>after')).toBe('after');
   });
 });
 

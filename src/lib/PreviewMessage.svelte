@@ -1,7 +1,11 @@
 <script lang="ts">
   import type { Preview } from './types';
   import { formatFiringTime } from './parse-when';
-  import { inlineLeadingBlock, linkifyBareURLs } from './slack-format';
+  import {
+    inlineLeadingBlock,
+    linkifyBareURLs,
+    sanitizePreviewHTML,
+  } from './slack-format';
   import BellIcon from './BellIcon.svelte';
 
   interface Props {
@@ -10,7 +14,7 @@
 
   let { preview }: Props = $props();
   let normalizedHTML = $derived(
-    linkifyBareURLs(inlineLeadingBlock(preview.whatHTML)),
+    linkifyBareURLs(inlineLeadingBlock(sanitizePreviewHTML(preview.whatHTML))),
   );
 </script>
 
