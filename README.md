@@ -4,6 +4,46 @@ A visual builder and preview tool for Slack's `/remind` command syntax. Compose 
 
 Live: https://remind-preview.pages.dev
 
+## What it does
+
+- Builds `/remind` commands from a form instead of asking you to remember the
+  syntax
+- Previews the reminder as a Slack-style message before you post it
+- Parses common natural-language reminder patterns and shows when they will fire
+- Supports rich text emphasis in the reminder body
+
+## Stack
+
+- Vite 8
+- Svelte 5
+- TypeScript 6
+- Tailwind CSS v4
+- Vitest + happy-dom + `@testing-library/svelte`
+- Cloudflare Pages
+
+## Development
+
+```sh
+pnpm install
+pnpm run dev
+pnpm run check
+pnpm run test
+pnpm run build
+```
+
+- Dev server: `http://localhost:5173`
+- Node version is pinned in `.node-version`
+- pnpm version is pinned via `packageManager` in `package.json`
+
+## Keyboard shortcuts
+
+- `Cmd/Ctrl + Enter`: send preview
+- `Cmd/Ctrl + Shift + Enter`: copy generated command
+- `Cmd/Ctrl + B`: bold
+- `Cmd/Ctrl + I`: italic
+- `Cmd/Ctrl + Shift + X`: strikethrough
+- `Cmd/Ctrl + E`: inline code
+
 ## Supported `/remind` syntax
 
 The patterns below are what the form and the parser handle. They cover the official examples and the additional patterns that Slack accepts in practice (some of which aren't documented in Slack's help pages).
@@ -76,30 +116,29 @@ This tool emits URLs as plain text. It does not currently preserve labelled link
 - **Slack's natural-language parser is closed-source.** This tool covers the patterns above; less common phrasings may surface a "couldn't determine the firing time" warning
 - **This tool treats bare URLs as the supported link path.** If you need labelled link markup, add or adjust it directly in Slack after copying the command
 
-## Stack
-
-- Vite 8 + Svelte 5 + TypeScript 6
-- Tailwind CSS v4
-- Vitest + happy-dom + `@testing-library/svelte`
-- Hosted on Cloudflare Pages
-
 ## Browser support
 
 The reminder editor targets current evergreen browsers. The rich-text toolbar still relies on `document.execCommand` for bold/italic/strike/code toggles, so the supported surface is the latest desktop Chrome, Edge, Firefox, and Safari releases where that editing behavior is still present.
 
 If a browser's editing engine diverges, the app should still degrade to plain text entry, but toolbar formatting and shortcut behavior are not guaranteed there.
 
-## Development
+## Testing and CI
 
-```sh
-pnpm install
-pnpm run dev      # http://localhost:5173
-pnpm run build    # → dist/
-pnpm run preview  # serve built output
-```
+- `pnpm run test` runs the full test suite
+- `pnpm run check` runs Svelte and TypeScript checks
+- `pnpm run build` produces `dist/`
+- CI runs check, test, and build on pushes to `main` and on PRs targeting
+  `main`
 
-Node version is pinned via `.node-version` (24.15.0) and pnpm via the `packageManager` field in `package.json`.
+## Deployment
+
+- Cloudflare Pages deploys automatically from `main`
+- Build command: `pnpm run build`
+- Output directory: `dist`
+- Framework preset: `None`
 
 ## Contributing
 
-Before working on the codebase, read [`AGENTS.md`](./AGENTS.md). It covers the architecture, code conventions, Slack Brand Terms compliance, the `/remind` domain quirks the parser relies on, and the decision framework used when adding features.
+Before making non-trivial changes, read [`AGENTS.md`](./AGENTS.md). It holds
+the repo-specific implementation rules, `/remind` edge cases, and product
+guardrails that are easy to miss in the code alone.
