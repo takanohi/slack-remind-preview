@@ -1,6 +1,6 @@
 import {
   SAFE_HREF_RE,
-  inlineLeadingBlock,
+  inlineBlockHTML,
   linkifyBareURLs,
   sanitizePreviewHTML,
 } from './slack-format';
@@ -44,10 +44,11 @@ export function buildCommandClipboardData({
   const prefix = ['/remind', target.trim()].filter(Boolean).join(' ');
   const bodyOps = normalizeOps(walkOps(parseHTML(whatHTML).body));
   const suffix = when.trim();
+  const bodyText = opsToText(bodyOps);
   const ops = mergeAdjacentOps([
     { insert: `${prefix} ` },
     ...bodyOps,
-    ...(suffix ? [{ insert: ` ${suffix}` }] : []),
+    ...(suffix ? [{ insert: `${separatorForTrailingText(bodyText)}${suffix}` }] : []),
   ]);
 
   return {
@@ -70,7 +71,7 @@ export function buildCommandPreviewHTML({
   }
 
   const bodyHTML = linkifyBareURLs(
-    inlineLeadingBlock(sanitizePreviewHTML(whatHTML)),
+    inlineBlockHTML(sanitizePreviewHTML(whatHTML)),
   ).trim();
   if (bodyHTML) {
     parts.push(` <span class="whitespace-pre-wrap break-words">${bodyHTML}</span>`);
@@ -78,7 +79,7 @@ export function buildCommandPreviewHTML({
 
   const trimmedWhen = when.trim();
   if (trimmedWhen) {
-    parts.push(` ${escapeHTML(trimmedWhen)}`);
+    parts.push(`${separatorForTrailingHTML(bodyHTML)}${escapeHTML(trimmedWhen)}`);
   }
 
   return parts.join('');
@@ -90,6 +91,14 @@ function renderPreviewTarget(target: string): string {
   }
 
   return `<span class="rounded bg-slack-link/10 px-1 font-medium text-slack-link">${escapeHTML(target)}</span>`;
+}
+
+function separatorForTrailingText(text: string): string {
+  return text.endsWith('\n') ? '' : ' ';
+}
+
+function separatorForTrailingHTML(html: string): string {
+  return /(?:<br\s*\/?>|\n)\s*$/i.test(html) ? '' : ' ';
 }
 
 function parseHTML(html: string): Document {

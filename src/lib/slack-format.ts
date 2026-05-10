@@ -90,6 +90,49 @@ export function inlineLeadingBlock(html: string): string {
 }
 
 /**
+ * Unwrap top-level block elements (`<div>` / `<p>`) into inline content with
+ * explicit `<br>` separators so the result can be embedded inside inline UI
+ * without browsers reintroducing block layout.
+ */
+export function inlineBlockHTML(html: string): string {
+  if (!html) return html;
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const body = doc.body;
+
+  for (const child of Array.from(body.childNodes)) {
+    if (
+      child.nodeType !== Node.ELEMENT_NODE ||
+      (((child as HTMLElement).tagName !== 'DIV') &&
+        (child as HTMLElement).tagName !== 'P')
+    ) {
+      continue;
+    }
+
+    const el = child as HTMLElement;
+    const previousSibling = el.previousSibling;
+    const hasNextSibling = el.nextSibling !== null;
+    if (
+      previousSibling &&
+      !(
+        previousSibling.nodeType === Node.ELEMENT_NODE &&
+        (previousSibling as HTMLElement).tagName === 'BR'
+      )
+    ) {
+      body.insertBefore(doc.createElement('br'), el);
+    }
+    while (el.firstChild) {
+      body.insertBefore(el.firstChild, el);
+    }
+    if (hasNextSibling) {
+      body.insertBefore(doc.createElement('br'), el);
+    }
+    body.removeChild(el);
+  }
+
+  return body.innerHTML;
+}
+
+/**
  * Wrap bare URLs found in text nodes with an anchor tag that opens in a new
  * tab. Any RFC 3986 scheme followed by `://` is recognized (`http`, `https`,
  * `ftp`, `ssh`, custom app deep links, …) so the preview matches Slack's

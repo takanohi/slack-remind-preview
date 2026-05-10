@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   htmlToPlain,
+  inlineBlockHTML,
   sanitizeEditorHTML,
   htmlToSlack,
   inlineLeadingBlock,
@@ -171,6 +172,28 @@ describe('inlineLeadingBlock', () => {
     expect(inlineLeadingBlock('<div>line1<br>line2</div><div>line3</div>')).toBe(
       'line1<br>line2<br><div>line3</div>',
     );
+  });
+});
+
+describe('inlineBlockHTML', () => {
+  it('returns empty for empty input', () => {
+    expect(inlineBlockHTML('')).toBe('');
+  });
+
+  it('keeps plain text unchanged', () => {
+    expect(inlineBlockHTML('hello')).toBe('hello');
+  });
+
+  it('unwraps body-level divs into br-separated inline content', () => {
+    expect(inlineBlockHTML('text<div>more</div><div>end</div>')).toBe(
+      'text<br>more<br>end',
+    );
+  });
+
+  it('preserves inline formatting while unwrapping blocks', () => {
+    expect(
+      inlineBlockHTML('<div><strong>bold</strong></div><div><code>x()</code></div>'),
+    ).toBe('<strong>bold</strong><br><code>x()</code>');
   });
 });
 

@@ -59,6 +59,19 @@ describe('buildCommandClipboardData', () => {
       { insert: ' every day at 9am' },
     ]);
   });
+
+  it('does not insert a stray leading space when the body ends with a newline', () => {
+    const data = buildCommandClipboardData({
+      target: '#aaa',
+      whatHTML: 'reminder<div>hello<br></div>',
+      when: 'in 30 minutes',
+    });
+
+    expect(data.text).toBe('/remind #aaa reminder\nhello in 30 minutes');
+    expect(data.webCustomData.ops).toEqual([
+      { insert: '/remind #aaa reminder\nhello in 30 minutes' },
+    ]);
+  });
 });
 
 describe('buildCommandPreviewHTML', () => {
@@ -77,5 +90,16 @@ describe('buildCommandPreviewHTML', () => {
       '<a href="https://example.com" target="_blank" rel="noopener noreferrer">docs</a>',
     );
     expect(html).toContain(' tomorrow');
+  });
+
+  it('does not render a leading space before when after a trailing line break', () => {
+    const html = buildCommandPreviewHTML({
+      target: '#aaa',
+      whatHTML: 'reminder<div>hello<br></div>',
+      when: 'in 30 minutes',
+    });
+
+    expect(html).toContain('reminder<br>hello<br></span>in 30 minutes');
+    expect(html).not.toContain('</span> in 30 minutes');
   });
 });
